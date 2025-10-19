@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Scheduler</title>
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --success-color: #28a745;
+            --light-color: #f5f7fa;
+            --dark-color: #333;
+            --gray-color: #777;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .form-container {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .events-container {
+            flex: 2;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--gray-color);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: var(--dark-color);
+        }
+
+        .events-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .events-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .event-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .event-item.important {
+            border-left-color: var(--warning-color);
+            background: #fff9e6;
+        }
+
+        .event-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-date, .event-category {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-right: 10px;
+            margin-bottom: 8px;
+        }
+
+        .event-description {
+            color: var(--gray-color);
+            margin-top: 8px;
+        }
+
+        .event-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-btn, .delete-btn, .important-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+
+        .edit-btn {
+            background: var(--warning-color);
+            color: var(--dark-color);
+        }
+
+        .delete-btn {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .important-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .important-btn.active {
+            background: var(--warning-color);
+            color: var(--dark-color);
+        }
+
+        .edit-btn:hover {
+            background: #e0a800;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .important-btn:hover {
+            background: #5a6268;
+        }
+
+        .important-btn.active:hover {
+            background: #e0a800;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-color);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+
+        .filter-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: #f1f3f4;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: var(--success-color);
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: var(--danger-color);
+        }
+
+        .form-error {
+            color: var(--danger-color);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+        }
+
+        .upcoming-badge {
+            background: var(--success-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .form-container, .events-container {
+                width: 100%;
+            }
+
+            .events-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .filter-options {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Event Scheduler</h1>
+            <p class="subtitle">Plan and manage your events efficiently</p>
+        </header>
+
+        <div class="app-container">
+            <div class="form-container">
+                <h2 id="form-title">Add New Event</h2>
+                <form id="event-form">
+                    <div class="form-group">
+                        <label for="event-title">Event Title</label>
+                        <input type="text" id="event-title" placeholder="Enter event title" required>
+                        <div class="form-error" id="title-error">Please enter a title for your event</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-date">Date & Time</label>
+                        <input type="datetime-local" id="event-date" required>
+                        <div class="form-error" id="date-error">Please select a future date and time</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-category">Category</label>
+                        <select id="event-category">
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="social">Social</option>
+                            <option value="education">Education</option>
+                            <option value="health">Health</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="event-description">Description</label>
+                        <textarea id="event-description" placeholder="Enter event description"></textarea>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="event-important">
+                        <label for="event-important">Mark as important</label>
+                    </div>
+                    <button type="submit" class="btn" id="submit-btn">Add Event</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none; margin-top: 10px;">Cancel</button>
+                </form>
+            </div>
+
+            <div class="events-container">
+                <div class="events-header">
+                    <h2>Your Events</h2>
+                    <div class="filter-options">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="work">Work</button>
+                        <button class="filter-btn" data-filter="personal">Personal</button>
+                        <button class="filter-btn" data-filter="social">Social</button>
+                        <button class="filter-btn" data-filter="important">Important</button>
+                        <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                    </div>
+                </div>
+                
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Search events...">
+                        <button class="btn" id="search-btn">Search</button>
+                    </div>
+                </div>
+                
+                <div class="events-list" id="events-list">
+                    <!-- Events will be dynamically added here -->
+                    <div class="empty-state">
+                        <i>📅</i>
+                        <h3>No events scheduled</h3>
+                        <p>Add your first event using the form on the left</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Event saved successfully!
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const eventForm = document.getElementById('event-form');
+            const eventsList = document.getElementById('events-list');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            const notification = document.getElementById('notification');
+            const formTitle = document.getElementById('form-title');
+            const submitBtn = document.getElementById('submit-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            
+            // Form validation elements
+            const titleError = document.getElementById('title-error');
+            const dateError = document.getElementById('date-error');
+            
+            // Event data storage
+            let events = JSON.parse(localStorage.getItem('events')) || [];
+            let currentFilter = 'all';
+            let searchQuery = '';
+            let editingEventId = null;
+            
+            // Initialize the app
+            renderEvents();
+            checkUpcomingEvents();
+            
+            // Event form submission
+            eventForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!validateForm()) {
+                    return;
+                }
+                
+                const title = document.getElementById('event-title').value;
+                const date = document.getElementById('event-date').value;
+                const category = document.getElementById('event-category').value;
+                const description = document.getElementById('event-description').value;
+                const important = document.getElementById('event-important').checked;
+                
+                if (editingEventId) {
+                    // Update existing event
+                    const eventIndex = events.findIndex(event => event.id === editingEventId);
+                    if (eventIndex !== -1) {
+                        events[eventIndex] = {
+                            id: editingEventId,
+                            title,
+                            date,
+                            category,
+                            description,
+                            important
+                        };
+                    }
+                    showNotification('Event updated successfully!');
+                    resetForm();
+                } else {
+                    // Create new event object
+                    const event = {
+                        id: Date.now(),
+                        title,
+                        date,
+                        category,
+                        description,
+                        important
+                    };
+                    
+                    // Add to events array
+                    events.push(event);
+                    showNotification('Event added successfully!');
+                }
+                
+                // Save to localStorage
+                saveEvents();
+                
+                // Re-render events
+                renderEvents();
+                
+                // Reset form
+                if (!editingEventId) {
+                    eventForm.reset();
+                }
+            });
+            
+            // Cancel edit
+            cancelBtn.addEventListener('click', function() {
+                resetForm();
+            });
+            
+            // Filter events
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update active button
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Set current filter
+                    currentFilter = this.getAttribute('data-filter');
+                    
+                    // Re-render events
+                    renderEvents();
+                });
+            });
+            
+            // Search events
+            searchBtn.addEventListener('click', function() {
+                searchQuery = searchInput.value.trim().toLowerCase();
+                renderEvents();
+            });
+            
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchQuery = searchInput.value.trim().toLowerCase();
+                    renderEvents();
+                }
+            });
+            
+            // Render events to the DOM
+            function renderEvents() {
+                // Clear current events
+                eventsList.innerHTML = '';
+                
+                // Filter events based on current filter and search query
+                let filteredEvents = events;
+                
+                if (currentFilter !== 'all') {
+                    if (currentFilter === 'important') {
+                        filteredEvents = events.filter(event => event.important);
+                    } else if (currentFilter === 'upcoming') {
+                        const now = new Date();
+                        filteredEvents = events.filter(event => new Date(event.date) > now);
+                    } else {
+                        filteredEvents = events.filter(event => event.category === currentFilter);
+                    }
+                }
+                
+                // Apply search filter
+                if (searchQuery) {
+                    filteredEvents = filteredEvents.filter(event => 
+                        event.title.toLowerCase().includes(searchQuery) || 
+                        event.description.toLowerCase().includes(searchQuery)
+                    );
+                }
+                
+                // Sort events by date
+                filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Check if there are events to display
+                if (filteredEvents.length === 0) {
+                    eventsList.innerHTML = `
+                        <div class="empty-state">
+                            <i>📅</i>
+                            <h3>No ${currentFilter !== 'all' ? currentFilter : ''} events found</h3>
+                            <p>${searchQuery ? 'Try a different search term or ' : ''}${currentFilter !== 'all' ? 'try changing the filter or ' : ''}Add events using the form on the left</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Create event elements
+                filteredEvents.forEach(event => {
+                    const eventElement = document.createElement
